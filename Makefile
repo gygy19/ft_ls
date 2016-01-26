@@ -6,7 +6,7 @@
 #    By: jguyet <jguyet@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/01/23 22:02:17 by jguyet            #+#    #+#              #
-#    Updated: 2016/01/24 08:05:30 by jguyet           ###   ########.fr        #
+#    Updated: 2016/01/26 01:57:17 by jguyet           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,11 +15,14 @@ SRC = ft_ls.c\
 	  print_error.c\
 	  sorting_args.c\
 	  print_files.c\
-	  print_dirs.c
+	  print_dirs.c\
+	  print_length.c\
+	  tools.c\
+	  tools_two.c
 
 NAME = ft_ls
 
-FLAGS = -Werror -Wextra -Wall
+FLAGS = -Werror -Wextra -Wall -O3
 
 SRCO = $(SRC:.c=.o)
 
