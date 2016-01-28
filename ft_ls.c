@@ -6,40 +6,41 @@
 /*   By: jguyet <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/01/22 20:15:37 by jguyet            #+#    #+#             */
-/*   Updated: 2016/01/26 05:24:37 by jguyet           ###   ########.fr       */
+/*   Updated: 2016/01/28 04:31:13 by jguyet           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "all.h"
 
-void		read_args(t_args *args, int flags, int win_size)
+void	read_args(t_args *args, int flags, int win_size)
 {
 	int id;
-	t_args *new;
 
 	id = 0;
+	if (args == NULL)
+		return ;
 	while (id < args->d_n)
 	{
-		if (is_lnk(args->dirs[id]) && id++)
-			continue;
 		if (args->d_n > 1 || args->f_n > 0)
 		{
-			ft_putstr("\n\033[33m");
-			ft_putstr(args->dirs[id]);
-			ft_putstr("\033[00m:\n");
+			ft_putstr("\n");
+			put_color_p_dir(args->dirs[id], flags);
 		}
-		if ((new = print_dir(args->dirs[id], flags, win_size)) != NULL)
-			read_args(new, flags, win_size);
+		if (have_right_open(args->dirs[id]))
+			print_dir(args->dirs[id], flags, win_size, 0);
+		free(args->dirs[id]);
 		id++;
 	}
-	free_args(args);
+	if (args->d_n > 0)
+		free(args->dirs);
+	free(args);
 }
 
 int		main(int argc, char **argv)
 {
-	int flags;
-	int	i;
-	t_args *args;
+	int		flags;
+	int		i;
+	t_args	*args;
 
 	if (argc > 1)
 	{
@@ -48,24 +49,18 @@ int		main(int argc, char **argv)
 		if (flags & FLAG_ERROR)
 			return (0);
 		if (i == -1)
-			print_dir("./", flags, get_size());
+			print_dir("./", flags, get_size(), 0);
 		else
 		{
 			args = sorting_args(i, argc, argv, flags);
 			print_error_dir_or_file(args);
 			if (args->f_n > 0)
-			{
 				print_files(args, flags, get_size(), "");
-				ft_putstr("\n");
-			}
 			if (args->d_n > 0)
 				read_args(args, flags, get_size());
-
 		}
 	}
 	else
-	{
-		print_dir("./", 0, get_size());
-	}
+		print_dir("./", 0, get_size(), 0);
 	return (0);
 }

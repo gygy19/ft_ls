@@ -19,8 +19,8 @@ int		add_flags(int flags, int part_flags)
 
 	i = START_FLAG;
 	ret = 0;
-	if (part_flags & FLAG_1 && flags & FLAG_l)
-		ret -= FLAG_l;
+	if (part_flags & FLAG_1 && flags & FLAG_L)
+		ret -= FLAG_L;
 	while (i < MAX_FLAG)
 	{
 		if ((part_flags & i) && !(flags & i))
@@ -35,15 +35,27 @@ int		add_part(char c)
 	if (c == '1')
 		return (FLAG_1);
 	if (c == 'a')
-		return (FLAG_a);
+		return (FLAG_A);
 	if (c == 'l')
-		return (FLAG_l);
+		return (FLAG_L);
 	if (c == 'r')
-		return (FLAG_r);
-	if (c == 'R')
 		return (FLAG_R);
+	if (c == 'R')
+		return (FLAG_RR);
 	if (c == 't')
-		return (FLAG_t);
+		return (FLAG_T);
+	if (c == 'o')
+		return (FLAG_O);
+	if (c == 'g')
+		return (FLAG_G);
+	if (c == 'G')
+		return (FLAG_GG);
+	if (c == 'f')
+		return (FLAG_F);
+	if (c == 'd')
+		return (FLAG_D);
+	if (c == '-')
+		return (FLAG_PREFIX);
 	return (FLAG_ERROR);
 }
 
@@ -58,13 +70,11 @@ int		get_flag_part(int i, int argc, char **argv, int put)
 		return (0);
 	while (argv[i][i2])
 	{
-		if (i2 == 1 && argv[i][i2] == '-')
-			part = FLAG_PREFIX;
 		if (!(part & add_part(argv[i][i2])))
 			part += add_part(argv[i][i2]);
-		if (add_part(argv[i][i2]) & FLAG_1 && part & FLAG_l)
-			part -= FLAG_l;
-		if (part & FLAG_ERROR || ((part & FLAG_PREFIX) && i2 > 1))
+		if (add_part(argv[i][i2]) & FLAG_1 && part & FLAG_L)
+			part -= FLAG_L;
+		if (part & FLAG_ERROR || (argv[i][i2] == '-' && i2 > 1))
 		{
 			if (put)
 				print_flag_error(argv[i][i2]);
@@ -101,7 +111,7 @@ int		started_argc(int argc, char **argv)
 	i = 1;
 	while ((part = get_flag_part(i, argc, argv, 1)) > 0)
 	{
-		if (part & FLAG_ERROR || part & FLAG_PREFIX)
+		if (part & FLAG_ERROR && part & FLAG_PREFIX)
 			break ;
 		i++;
 	}

@@ -16,7 +16,7 @@ void		print_flag_error(int c)
 {
 	ft_putstr("ft_ls: illegal option -- ");
 	ft_putchar(c);
-	ft_putstr("\nusage: ft_ls [-Ralrt1] [file ...]\n");
+	ft_putstr("\nusage: ft_ls [-GRafglort1] [file ...]\n");
 	exit(0);
 }
 
@@ -31,9 +31,15 @@ void		print_error_dir_or_file(t_args *args)
 	{
 		ft_putstr("ft_ls: ");
 		perror(args->errors[i]);
-		free(args->errors[i]);
 		i++;
 	}
+}
+
+void		print_error_zero(void)
+{
+	ft_putstr("ft_ls: ");
+	ft_putstr("fts_open: No such file or directory\n");
+	exit(0);
 }
 
 void		print_error_malloc(char *txt)

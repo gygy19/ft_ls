@@ -12,83 +12,41 @@
 
 #include "all.h"
 
-char		**sort_tab_za(char **tab, size_t tab_size,\
-		char **new_tab, size_t size_new)
+char		**sort_tab(char **tab, size_t tab_size, int f(char **, size_t))
 {
-	size_t i;
-	size_t id;
+	size_t	id;
+	size_t	size_new;
+	char	**new_tab;
 
-	i = 0;
-	id = -1;
-	while (i < tab_size)
+	size_new = 0;
+	new_tab = get_new_tab(tab_size + 1);
+	while (size_new < tab_size)
 	{
-		if ((int)id == -1 && tab[i][0] != '\0')
-			id = i;
-		else if (tab[i][0] != '\0' && id != i)
-			if (ft_strcmp(tab[id], tab[i]) <= 0)
-				id = i;
-		i++;
+		id = f(tab, tab_size);
+		if (tab[id] != NULL)
+		{
+			new_tab[size_new] = ft_strdup(tab[id]);
+			size_new++;
+			ft_bzero(tab[id], 1);
+		}
 	}
-	if (size_new == 0 && !(new_tab = get_new_tab(tab_size + 1)))
-		return (NULL);
-	if (tab[id])
-	{
-		new_tab[size_new] = ft_strdup(tab[id]);
-		size_new += 1;
-		ft_bzero(tab[id], 1);
-	}
-	if (size_new == tab_size)
-		return (new_tab);
-	return (sort_tab_za(tab, tab_size, new_tab, size_new));
+	return (new_tab);
 }
 
-char		**sort_tab_az(char **tab, size_t tab_size, char **new_tab, size_t size_new)
+void		sort_dirs(t_args **args, int flags)
 {
-	size_t i;
-	size_t id;
+	char **tmp;
 
-	i = 0;
-	id = -1;
-	while (i < tab_size)
-	{
-		if ((int)id == -1 && tab[i][0] != '\0')
-			id = i;
-		else if (tab[i][0] != '\0' && id != i)
-			if (ft_strcmp(tab[id], tab[i]) >= 0)
-				id = i;
-		i++;
-	}
-	if (size_new == 0 && !(new_tab = get_new_tab(tab_size + 1)))
-		return (NULL);
-	if (tab[id] != NULL)
-	{	
-		new_tab[size_new] = ft_strdup(tab[id]);
-		size_new++;
-		ft_bzero(tab[id], 1);
-	}
-	if (size_new >= tab_size)
-		return (new_tab);
-	return (sort_tab_az(tab, tab_size, new_tab, size_new));
-}
-
-t_args		*create_args(size_t size)
-{
-	t_args *new;
-
-	new = (t_args *)malloc(sizeof(t_args));
-	if (new)
-	{
-		if (!(new->dirs = get_new_tab(size + 1))
-				|| !(new->files = get_new_tab(size + 1))
-				|| !(new->errors = get_new_tab(size + 1)))
-			return (NULL);
-		new->d_n = 0;
-		new->f_n = 0;
-		new->e_n = 0;
-		new->size = size;
-		return (new);
-	}
-	return (NULL);
+	tmp = NULL;
+	if ((*args)->d_n > 0 && flags & FLAG_T)
+		tmp = sort_tab((*args)->dirs, (*args)->d_n, sort_by_time);
+	else if ((*args)->d_n > 0 && flags & FLAG_R)
+		tmp = sort_tab((*args)->dirs, (*args)->d_n, sort_za);
+	else if ((*args)->d_n > 0)
+		tmp = sort_tab((*args)->dirs, (*args)->d_n, sort_az);
+	free_tab((*args)->dirs, O_DIR);
+	if ((*args)->d_n > 0)
+		(*args)->dirs = tmp;
 }
 
 t_args		*sort_by_flags(t_args **args, int flags)
@@ -96,77 +54,73 @@ t_args		*sort_by_flags(t_args **args, int flags)
 	char **tmp;
 
 	tmp = NULL;
-	if ((*args)->d_n > 0 && flags & FLAG_r)
-		tmp = sort_tab_za((*args)->dirs, (*args)->d_n, NULL, 0);
-	else if ((*args)->d_n > 0)
-		tmp = sort_tab_az((*args)->dirs, (*args)->d_n, NULL, 0);
-	if ((*args)->d_n > 0)
-	{
-		free_tab((*args)->dirs);
-		(*args)->dirs = tmp;
-	}
-	if ((*args)->f_n > 0 && flags & FLAG_r)
-		tmp = sort_tab_za((*args)->files, (*args)->f_n, NULL, 0);
+	sort_dirs(args, flags);
+	if ((*args)->f_n > 0 && flags & FLAG_T)
+		tmp = sort_tab((*args)->files, (*args)->f_n, sort_by_time);
+	else if ((*args)->f_n > 0 && flags & FLAG_R)
+		tmp = sort_tab((*args)->files, (*args)->f_n, sort_za);
 	else if ((*args)->f_n > 0)
-		tmp = sort_tab_az((*args)->files, (*args)->f_n, NULL, 0);
+		tmp = sort_tab((*args)->files, (*args)->f_n, sort_az);
+	free_tab((*args)->files, O_DIR);
 	if ((*args)->f_n > 0)
-	{
-		free_tab((*args)->files);
 		(*args)->files = tmp;
-	}
 	if ((*args)->e_n > 0)
-	{
-		tmp = sort_tab_az((*args)->errors, (*args)->e_n, NULL, 0);
-		free_tab((*args)->errors);
+		tmp = sort_tab((*args)->errors, (*args)->e_n, sort_az);
+	free_tab((*args)->errors, O_DIR);
+	if ((*args)->e_n > 0)
 		(*args)->errors = tmp;
-	}
 	return (*args);
 }
 
 t_args		*sorting_args(int i, int max, char **argv, int flags)
 {
-	t_args		*args;
+	t_args	*args;
 
-	if (!(args = create_args(max)))
+	if (!(args = create_args(max + 1)))
 		return (NULL);
 	while (i < max)
 	{
-		if ((is_dir(argv[i])) && !is_lnk(argv[i]))
+		if (argv[i][0] == '\0')
+			print_error_zero();
+		if ((is_dir(argv[i])) && !(flags & FLAG_D))
 		{
 			args->dirs[args->d_n] = ft_strdup(argv[i]);
 			args->d_n++;
 		}
-		else if (exist_file(argv[i]))
+		else if (exist_file(ft_strtrim(argv[i])))
 		{
 			args->files[args->f_n] = ft_strdup(argv[i]);
 			args->f_n++;
 		}
 		else
-		{
-			args->errors[args->e_n] = ft_strdup(argv[i]);
-			args->e_n++;
-		}
+			args->errors[args->e_n++] = ft_strdup(argv[i]);
 		i++;
 	}
+	if (flags & FLAG_F)
+		return (args);
 	return (sort_by_flags(&args, flags));
 }
 
-t_args	*sorting_args_end_save(int i, int max, char **argv, int flags)
+t_args		*sorting_args_end_save(int i, int max, char **argv, int flags)
 {
-	t_args		*args;
-	
+	t_args	*args;
+
+	if (max <= 0)
+		return (NULL);
 	if (!(args = create_args(max + 1)))
 		return (NULL);
 	while (i < max)
 	{
-		if ((is_dir(argv[i])) && !is_lnk(argv[i]))
+		if ((is_dir(argv[i])) && !is_lnk(argv[i]) && !(flags & FLAG_D))
 		{
 			args->dirs[args->d_n] = ft_strdup(argv[i]);
 			args->d_n++;
 		}
-			args->files[args->f_n] = ft_strdup(argv[i]);
-			args->f_n++;
+		args->files[args->f_n] = ft_strdup(argv[i]);
+		args->f_n++;
 		i++;
 	}
+	if (flags & FLAG_F)
+		return (args);
 	return (sort_by_flags(&args, flags));
 }

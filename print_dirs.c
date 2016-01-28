@@ -12,82 +12,50 @@
 
 #include "all.h"
 
-t_args		*print_dir_l(char *dir, int flags)
+int			add_new_dir(char *dir, int flags, char *d_name)
 {
-	(void)dir;
-	(void)flags;
-	return (NULL);
+	if (flags & FLAG_RR && ft_strcmp(d_name, ".") != 0)
+		if (ft_strcmp(d_name, "..") != 0)
+			if (is_dir(ft_strjoin(ft_strjoin(dir, "/"), d_name)) > 0)
+				return (1);
+	return (0);
 }
 
-long		get_nbr_files(char *dir)
+void		print_d(char *dir, int flags)
 {
-	long caca;
-	struct stat *stats;
-
-	stats = malloc(sizeof(struct stat));
-	stat(dir, stats);
-	caca = stats->st_nlink - 2;
-	free(stats);
-	return (caca);
+	if (flags & FLAG_D)
+	{
+		ft_putstr(dir);
+		ft_putstr("\n");
+		exit(0);
+	}
 }
 
-int			is_lnk(char *dir)
+void		print_dir(char *dir, int flags, int w_s, int i)
 {
-	int lnk;
-	struct stat *stats;
+	char			**new_args;
+	char			**here;
+	int				o;
+	DIR				*dirp;
+	struct dirent	*files;
 
-	stats = malloc(sizeof(struct stat));
-	lstat(dir, stats);
-	lnk = (S_ISLNK(stats->st_mode));
-	free(stats);
-	return (lnk);
-}
-
-t_args		*print_dir(char *dir, int flags, int win_size)
-{
-	DIR *dirp;
-	struct dirent *files;
-	char **new_args;
-	char **here;
-	int i;
-	int o;
-	
-	(void)win_size;
-	//if (flags & FLAG_l)
-		//return (print_dir_l(dir, flags));
+	print_d(dir, flags);
 	dirp = open_directory(dir);
-	if (dirp == NULL)
-		return (NULL);
-	i = 0;
 	o = 0;
-	files = NULL;
 	files = malloc(sizeof(struct dirent));
-	new_args = get_new_tab(40960);
-	here = get_new_tab(40960);
+	new_args = get_new_tab(O_DIR);
+	here = get_new_tab(O_DIR);
 	while ((files = readdir(dirp)) != 0)
 	{
-		if (files->d_name[0] == '.' && !(flags & FLAG_a))
+		if ((files->d_name[0] == '.' && !(flags & FLAG_A) && !(flags & FLAG_F)))
 			continue;
-		here[o] = ft_strdup(files->d_name);
-		//ft_putstr(files->d_name);
-		if (files->d_name[0] != '.' && is_dir(ft_strjoin(ft_strjoin(dir, "/"), files->d_name)) > 0)
-		{
-				new_args[i] = ft_strjoin(ft_strjoin(dir, "/"), files->d_name);
-				i++;
-		}
-		o++;
+		here[o++] = ft_strdup(files->d_name);
+		if (add_new_dir(dir, flags, files->d_name))
+			new_args[i++] = ft_strjoin(ft_strjoin(dir, "/"), files->d_name);
 	}
 	closedir(dirp);
-	if (o > 0)
-		print_files(sorting_args_end_save(0, o, here, flags), flags, win_size, dir);
+	print_files(sorting_args_end_save(0, o, here, flags), flags, w_s, dir);
 	free(files);
-	free_tab(here);
-	free(here);
-	if (flags & FLAG_R && i > 0)
-	{
-		read_args(sorting_args_end_save(0, i, new_args, flags), flags, win_size);
-		return (NULL);
-	}
-	free_tab(new_args);
-	return (NULL);
+	if (flags & FLAG_RR && i > 0)
+		read_args(sorting_args_end_save(0, i, new_args, flags), flags, w_s);
 }

@@ -12,14 +12,14 @@
 
 #include "all.h"
 
-void		free_tab(char **tab)
+void		free_tab(char **tab, int size)
 {
 	int i;
 
 	if (!tab || !tab[0])
 		return ;
 	i = 0;
-	while (tab[i])
+	while (tab[i] && i < size)
 	{
 		free(tab[i]);
 		i++;
@@ -28,8 +28,46 @@ void		free_tab(char **tab)
 
 void		free_args(t_args *args)
 {
-	free_tab(args->files);
-	free_tab(args->errors);
-	free_tab(args->dirs);
-	free(args);
+	if (args->f_n > 0)
+		free_tab(args->files, args->f_n);
+	if (args->e_n > 0)
+		free_tab(args->errors, args->e_n);
+}
+
+char		*end_slash(char *dir)
+{
+	int		i;
+	char	*tmp;
+
+	tmp = dir;
+	i = ft_strlen(dir);
+	tmp += i;
+	while (i > 0)
+	{
+		if (tmp[0] == '/')
+			return (tmp + 1);
+		tmp--;
+		i--;
+	}
+	return (tmp);
+}
+
+void		put_attr(char *file)
+{
+	if (listxattr(file, NULL, 0, XATTR_NOFOLLOW) > 0)
+		ft_putstr("@");
+	else
+		ft_putstr(" ");
+}
+
+int			is_lnk(char *dir)
+{
+	int			lnk;
+	struct stat	*stats;
+
+	stats = malloc(sizeof(struct stat));
+	lstat(dir, stats);
+	lnk = (S_ISLNK(stats->st_mode));
+	free(stats);
+	return (lnk);
 }
